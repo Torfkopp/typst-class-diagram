@@ -1,0 +1,1 @@
+# typst-class-diagram
