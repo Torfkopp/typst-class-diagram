@@ -13,125 +13,13 @@
 /// 	node((0,0), `rect`, shape: fletcher.shapes.rect)
 /// )
 ///
-// #let rect(node, extrude) = {
-// 	let r = node.corner-radius
-// 	let (w, h) = node.size.map(i => i/2 + extrude)
-// 	draw.rect(
-// 		(-w, -h), (+w, +h),
-// 		radius: if r != none { r + extrude },
-// 	)
-// }
-
-#let class-node-class(title: str, attributes: (), methods: (), w, h) = {
-  block(
-    stroke: 1pt + green,
-    fill: luma(240),
-    inset: 0pt,
-  )[
-    #stack(
-      dir: ttb,
-      // Class name section
-      rect(fill: green.lighten(70%), stroke: (1pt + green), width: w)[
-        #align(center)[*#title*]
-      ],
-      if attributes.len() >= 1 {
-        rect(stroke: (bottom: 1pt+black), width: 30%)[
-        // Attributes section
-        #for attr in attributes {
-          text(attr, size: 11pt)
-          linebreak()
-        }
-      ]
-      }
-      else {
-        rect(stroke: (bottom: 1pt+black), width: w, height: 1%)
-        // linebreak()
-      },
-      if methods.len() >= 1 {
-        rect(stroke: none)[
-          // Methods section
-          #for m in methods {
-            text(m, size: 11pt)
-            linebreak()
-          }
-        ]
-      }
-      else {
-        linebreak()
-      }
-    )
-  ]
-}
-
-#let class-node(node, extrude, title: "", attributes: (), methods: ()) = {
+#let rect(node, extrude) = {
+	let r = node.corner-radius
 	let (w, h) = node.size.map(i => i/2 + extrude)
-  class-node-class(title: title, attributes: attributes, methods: methods, w, h)
-	// draw.rect((-w, -h), (+w, +h))
-}
-
-#let class-node-draw(
-	node, 
-	extrude, 
-	background: white,
-	colour: white, 
-	stroke: black,
-	radius: 0.0,
-	title-colour: black, 
-	attributes: (), 
-	methods: ()
-	) = {
-		let INLINE_SIDE = 3pt
-		let INLINE_TOP = text.size
-		let (w, h) = node.size
-		let title = node.label.child
-		
-		//width of longest word
-		let width = 0pt 
-		for l in ((title,) + attributes + methods) {
-			let line_width = measure(l).width
-			if line_width > width { width = line_width - w}
-		}
-
-		// height based on the number of items
-		let line-space = par.leading
-		let attribute_height = (INLINE_TOP) + line-space * calc.max(attributes.len() - 1, 0)
-		for l in attributes { attribute_height = attribute_height + measure(l).height}
-		
-		let method_height = (INLINE_TOP) + line-space * calc.max(methods.len() - 1, 0)
-		for l in methods { method_height = method_height + measure(l).height}
-
-		let n_h = -h + 10pt
-		let a_h = n_h - attribute_height
-	
-		if extrude != none {
-			draw.rect((-w - extrude, n_h - attribute_height - method_height - extrude), (w + width + extrude, h + extrude), name: "outer", fill: background)
-		}
-
-		draw.rect((-w, n_h - attribute_height - method_height), (w + width, h), name: "outer", stroke: rgb(0,0,0,0))
-		draw.rect((-w, n_h), (w + width, h), name: "name", stroke: stroke, fill: colour, radius: (north: radius))
-		draw.rect((-w, a_h), (w + width, n_h), name: "attributes", stroke: stroke, fill: background)
-		draw.rect((-w, a_h - method_height), (w + width, a_h), name: "methods", stroke: stroke, radius: (south: radius), fill: background)
-
-
-		draw.content("name", text(fill: title-colour, weight: "bold", title))
-
-		// Attributes
-		let mid_attr = n_h - (attribute_height / 2)
-		draw.content((-w + INLINE_SIDE, mid_attr), anchor: "west", [
-			#for attr in attributes {
-					attr
-					linebreak()
-			}
-		])
-
-		// Methods
-		let mid_methods = a_h - (method_height / 2)
-		draw.content((-w + INLINE_SIDE, mid_methods), anchor: "west", [
-			#for m in methods {
-				m
-				linebreak()
-			}
-		])
+	draw.rect(
+		(-w, -h), (+w, +h),
+		radius: if r != none { r + extrude },
+	)
 }
 
 /// The standard circle node shape.
