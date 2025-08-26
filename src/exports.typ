@@ -1,10 +1,13 @@
-#import "deps.typ": cetz
+#import "fletcher/deps.typ": cetz
 
-#import "marks.typ": *
+#import "fletcher/marks.typ": *
 #import "draw.typ": *
-#import "shapes.typ"
-#import "node.typ": *
-#import "edge.typ": *
+#import "fletcher/shapes.typ"
+#import "fletcher/node.typ": *
+#import "fletcher/edge.typ": *
 #import "diagram.typ": *
-#import "coords.typ": *
-#import "utils.typ"
+#import "fletcher/coords.typ": *
+#import "fletcher/utils.typ"
+#import "class-edge.typ": *
+#import "class-node.typ": *
+#import "draw-class-edge.typ": *
