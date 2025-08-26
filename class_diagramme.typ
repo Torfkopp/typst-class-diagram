@@ -90,9 +90,10 @@
     shape: class-node-draw.with(),
   ),
 	class-edge(<d.east>, <e.west>, arrow: "Composition", label: "Person"),
-  class-edge(<d>, (6,6), (2,6), (1,5), (0,5),  <d.south>, arrow: "Composition", bend: -110deg, loop-angle: 120deg, label: "test", mult_left: "1", mult_right: "2"),
-  class-edge(<d.north>, (0.45, -2), (5.91, -2), <e.north>, arrow: "Inheritance", label: "test", mult_left: "1", mult_right: "2"),
-  // class-edge(<e>, "~>", <e>, bend: -130deg, loop-angle: 120deg, label: "test"),
+  // class-edge(<d>, (6,6), (2,6), (1,5), (0,5),  <d.south>, arrow: "Composition", bend: -110deg, loop-angle: 120deg, label: "test", mult_left: "1", mult_right: "2", desc_left: "3", desc_right: "4"),
+  class-edge(<d.north>, (0.45, -2), (5.91, -2), <e.north>, arrow: "Inheritance", label: "test", mult_left: "1", mult_right: "2", desc_left: "3", desc_right: "4"),
+  //class-edge(<e>, "~>", <e>, bend: -130deg, loop-angle: 120deg, label: "test"),
+  // edge(<d.south>, (0.45,4), (5.91,4), <e.south>, label: "test", label-pos: 20%)
 )
 
 = TODO
@@ -100,9 +101,9 @@
 + #strike[Arrows]
   - #strike[ARROW HEADS L 117 / L 127]
   - #strike[Mehrere Labels]
-+ Polyline fix
-  - First and last segment get mult/ desc
-  - One Segment in the middle gets label
++ #strike[Polyline fix]
+  -  #strike[First and last segment get mult/ desc]
+  -  #strike[One Segment in the middle gets label]
 + Better name than "class-edge"
   - Better names for other stuff as well
 + Clean Up

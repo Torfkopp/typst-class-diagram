@@ -109,6 +109,65 @@
 	
 }
 
+#let draw-edge-line(edge, debug: 0) = {
+	let (from, to) = edge.final-vertices
+	let θ = angle-between(from, to)
+
+	// Draw line(s), one for each extrusion shift
+	for shift in edge.extrude {
+
+		let offsets = cap-offsets(edge, shift)
+		let points = (from, to).zip(offsets)
+			.map(((point, offset)) => {
+				// Shift line sideways (for multi-stroke effect)
+				point = (rel: (θ + 90deg, shift), to: point)
+				// Shift end points lengthways depending on marks
+				point = (rel: (θ, offset), to: point)
+				point
+			})
+
+		let obj = cetz.draw.line(
+			..points,
+			stroke: edge.stroke,
+		)
+
+		with-decorations(edge, obj)
+	}
+
+	// Draw marks
+	let total-path-len = vector-len(vector.sub(from, to))
+	let curve(t) = {
+		if calc.abs(total-path-len) > 1e-3pt {
+			t = relative-to-float(t, len: total-path-len)
+			vector.lerp(from, to, t)
+		} else { from }
+	}
+	let curve = parametrised-edge(edge)
+
+	for mark in edge.marks {
+		place-mark-on-curve(mark, curve, stroke: edge.stroke, debug: debug >= 3)
+	}
+
+	// Draw label
+	// This edge only has a single segment, so don't draw the label unless it's 
+	// placed on segment 0. This means that when calling this function for the
+	// individual segments of an edge (`draw-edge-polyline`), the `segment` field
+	// of `label-pos` must be set to 0.
+	
+	//if edge.label != none { //and edge.labels.at(i).pos.segment == 0 {
+
+		// Choose label anchor based on edge direction,
+		// preferring to place labels above the edge
+		// if edge.label.side == auto {
+		// 	// edges are often exactly vertical, but tiny floating point errors make θ unstable
+		// 	// so choose 89.5deg to avoid flickering
+		// 	edge.labels.at(i).side = if calc.abs(θ) < 89.5deg { left } else { right }
+		// }
+	for i in range(edge.labels.len()) {
+		place-class-edge-label-on-curve(edge.labels.at(i), curve, debug: debug)
+	}
+}
+
 
 #let draw-class-edge-line(edge, debug: 0) = {
 	let (from, to) = edge.final-vertices
@@ -396,6 +455,7 @@
 		// label (but change its segment to 0 because `draw-edge-line` will consider
 		// this segment a single-segment edge and only draw labels on segment 0).
 		// Otherwise, draw no label.
+		
 		// for i in range(edge.labels.len()) {
 		
 		// let label-options = if i == edge.labels.at(i).pos.segment {
@@ -405,22 +465,28 @@
 		// 	}
 		// }
 		
-		let label-options = if i == edge.labels.at(0).pos.segment {
-			(label-pos: edge.labels.at(0).pos + (segment: 0), label: edge.labels.at(0).text)
-		} else {
-			(label: none)
-		}
+		let segment-labels = edge.labels.filter(label => label != none and label.pos.segment == i)
 
-
-		draw-class-edge-line(
-			edge + (
-				kind: "line",
-				final-vertices: (from, to),
-				marks: marks,
-				stroke: stroke-with-phase(phase),
-			) + label-options,
-			debug: debug,
+		draw-edge-line(
+				edge + (
+						kind: "line",
+						final-vertices: (from, to),
+						marks: marks,
+						stroke: stroke-with-phase(phase),
+						labels: segment-labels,
+				),
+				debug: debug,
 		)
+
+		// draw-edge-line(
+		// 	edge + (
+		// 		kind: "line",
+		// 		final-vertices: (from, to),
+		// 		marks: marks,
+		// 		stroke: stroke-with-phase(phase),
+		// 	), //+ label-options,
+		// 	debug: debug,
+		// )
 
 		phase += Δphase
 
