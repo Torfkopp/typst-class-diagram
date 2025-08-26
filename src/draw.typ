@@ -1,7 +1,7 @@
-#import "utils.typ": *
-#import "marks.typ": *
-#import "coords.typ": uv-to-xy, default-ctx, find-farthest-intersection
-#import "edge.typ": find-nodes-for-edge, parametrised-edge
+#import "fletcher/utils.typ": *
+#import "fletcher/marks.typ": *
+#import "fletcher/coords.typ": uv-to-xy, default-ctx, find-farthest-intersection
+#import "fletcher/edge.typ": find-nodes-for-edge, parametrised-edge
 #import "draw-class-edge.typ": draw-class-edge
 
 #let DEBUG_COLOR = rgb("f008")

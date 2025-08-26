@@ -1,9 +1,9 @@
-#import "utils.typ": *
-#import "node.typ": *
-#import "edge.typ": *
+#import "fletcher/utils.typ": *
+#import "fletcher/node.typ": *
+#import "fletcher/edge.typ": *
 #import "class-edge.typ": *
 #import "draw.typ": draw-diagram
-#import "coords.typ": *
+#import "fletcher/coords.typ": *
 
 
 
