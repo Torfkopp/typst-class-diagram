@@ -24,7 +24,7 @@ The nodes for classes are created with `class-node`:
 ```typ
 #import "src/class-node.typ": class-node
 
-class-node(
+#class-node(
   label: "Person",
   attributes: (
     "(+-/\#)name: type",
@@ -44,7 +44,7 @@ The edges between the nodes are created with `class-edge`:
 ```typ
 #import "src/class-edge.typ": class-edge
 
-class-edge(<from>, <to>, arrow: "Inheritance", direction: left, label: "label", mult-left: "0..1", mult-right: "1..*")
+#class-edge(<from>, <to>, arrow: "Inheritance", direction: left, label: "label", mult-left: "0..1", mult-right: "1..*")
 ```
 The edge's design is given with the `arrow` parameter. It takes the name of the relationship as string.\
 The `direction` controls the direction of the arrow (<-, ->, <->).
