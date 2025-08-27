@@ -3,34 +3,25 @@
 #import "fletcher/src/coords.typ": default-ctx, find-farthest-intersection, resolve, vector-polar-with-xy-or-uv-length
 #import "fletcher/src/edge.typ": interpret-edge-args, interpret-marks-arg, normalize-label-pos
 
-#let ALIASES = (
-  "Association": ("-", "-", "-"),
-  "Navigable Association": ("<", "-", ">"),
-  "Inheritance": ("<|", "-", "|>"),
-  "Realisation": ("<|", "--", "|>"),
-  "Dependency": ("<", "--", ">"),
-  "Aggregation": ("<>", "-", "<>"),
-  "Composition": ("<>", "-", "<>"),
-)
 
 #let get_arrow(arrow, direction, mark-size) = {
-  let dash = if arrow == "Realisation" or arrow == "Dependency" { "dashed" } else { "solid" }
+  let dash = if arrow in ("Realisation", "Dependency", "R", "D") { "dashed" } else { "solid" }
 
   let arrow-mark = (
     size: mark-size,
   )
 
-  if arrow == "Composition" {
+  if arrow in ("Composition", "C") {
     arrow-mark.inherit = "<>"
     arrow-mark.fill = black
-  } else if arrow == "Aggregation" {
+  } else if arrow in ("Aggregation", "AG") {
     arrow-mark.inherit = "<>"
-  } else if arrow == "Inheritance" or arrow == "Realisation" {
+  } else if arrow in ("Inheritance", "Realisation", "I", "R") {
     arrow-mark.inherit = "latex"
     arrow-mark.fill = rgb(0,0,0,0)
     arrow-mark.stroke = black
     arrow-mark.size = 50
-  } else if arrow == "Navigable Association" or arrow == "Dependency" {
+  } else if arrow in ("NavigableAssociation", "Dependency", "NA", "D") {
     arrow-mark.inherit = "straight"
   } else {
     arrow-mark.inherit = "|"
@@ -43,6 +34,18 @@
   return (arrow, dash)
 }
 
+/// A dictionary defining default values for edge labels.
+/// The label arguments of fletcher's edges.
+/// - text (str): The label text.
+/// - side (auto, str): The side of the edge to place the label
+/// - pos (percent): The position along the edge
+/// - sep (auto, length): The distance from the edge
+/// - angle (auto, angle): The rotation angle of the label
+/// - anchor (auto, str): The anchor point of the label
+/// - fill (auto, colour): The background colour of the label
+/// - size (auto, length): The font size of the label
+/// - wrapper (auto, func): A wrapper function
+///
 #let label-dict = (
   text: "text",
   side: auto,
@@ -63,7 +66,38 @@
   new-dict
 }
 
-
+/// Draw a connecting edge in a UML diagram.
+/// 
+/// --------------------------------------------
+/// 
+/// `Label-dict`:\
+/// A dictionary defining default values for edge labels.
+/// Practically the label arguments of fletcher's edges\
+/// -text (str): The label text\
+/// -side (auto, str): The side of the edge to place the label\
+/// -pos (percent): The position along the edge\
+/// -sep (auto, length): The distance from the edge\
+/// -angle (auto, angle): The rotation angle of the label\
+/// -anchor (auto, str): The anchor point of the label\ 
+/// -fill (auto, colour): The background colour of the label\
+/// -size (auto, length): The font size of the label\
+/// -wrapper (auto, func): A wrapper function\
+/// --------------------------------------------
+/// 
+/// - arrow (str): The type of UML edge, one of "Association" (short: "A"), "Navigable Association" ("NA"), "Inheritance" ("I"), "Realisation" ("R"), "Dependency" ("D"), "Aggregation" ("AG"), "Composition" ("C"). Determines the arrow heads and line style.
+/// 
+/// - direction (direction): The direction of the arrow, left or right for single-headed arrows, top, bottom, or others for double-headed arrows.
+/// 
+/// - label (str, dict): A centered label for the edge. Either a single string or a `label-dict`.
+/// 
+/// - mult-left (str, dict): A multiplicity label on the left top ide of the edge. Either a single string or a `label-dict`.
+/// 
+/// - mult-right (str, dict): A multiplicity label on the right top side of the edge. Either a single string or a `label-dict`.
+/// 
+/// - desc-left (str, dict): A description label on the left bottom side of the edge. Either a single string or a `label-dict`.
+/// 
+/// - desc-right (str, dict): A description label on the right bottom side of the edge. Either a single string or a `label-dict`.
+///
 #let class-edge(
   ..args,
   vertices: (),
@@ -71,10 +105,10 @@
   mark-size: 15,
   direction: top,
   label: none,
-  mult_left: none,
-  mult_right: none,
-  desc_left: none,
-  desc_right: none,
+  mult-left: none,
+  mult-right: none,
+  desc-left: none,
+  desc-right: none,
   stroke: auto,
   dash: auto,
   decorations: none,
@@ -98,32 +132,32 @@
 ) = {
   let labels = ()
 
-  if mult_left != none {
-    if type(mult_left) == str { mult_left = (text: mult_left) }
-    mult_left.insert("side", mult_left.at("side", default: left))
-    mult_left.insert("pos", mult_left.at("pos", default: 15%))
-    labels.push(fill-label(mult_left))
+  if mult-left != none {
+    if type(mult-left) == str { mult-left = (text: mult-left) }
+    mult-left.insert("side", mult-left.at("side", default: left))
+    mult-left.insert("pos", mult-left.at("pos", default: 15%))
+    labels.push(fill-label(mult-left))
   }
-  if mult_right != none {
-    if type(mult_right) == str { mult_right = (text: mult_right) }
-    mult_right.insert("side", mult_right.at("side", default: left))
-    mult_right.insert("pos", mult_right.at("pos", default: 85%))
-    labels.push(fill-label(mult_right))
+  if mult-right != none {
+    if type(mult-right) == str { mult-right = (text: mult-right) }
+    mult-right.insert("side", mult-right.at("side", default: left))
+    mult-right.insert("pos", mult-right.at("pos", default: 85%))
+    labels.push(fill-label(mult-right))
   }
-  if desc_left != none {
-    if type(desc_left) == str { desc_left = (text: desc_left) }
-    desc_left.insert("side", desc_left.at("side", default: right))
-    desc_left.insert("pos", desc_left.at("pos", default: 15%))
-    labels.push(fill-label(desc_left))
+  if desc-left != none {
+    if type(desc-left) == str { desc-left = (text: desc-left) }
+    desc-left.insert("side", desc-left.at("side", default: right))
+    desc-left.insert("pos", desc-left.at("pos", default: 15%))
+    labels.push(fill-label(desc-left))
   }
-  if desc_right != none {
-    if type(desc_right) == str { desc_right = (text: desc_right) }
-    desc_right.insert("side", desc_right.at("side", default: right))
-    desc_right.insert("pos", desc_right.at("pos", default: 85%))
-    labels.push(fill-label(desc_right))
+  if desc-right != none {
+    if type(desc-right) == str { desc-right = (text: desc-right) }
+    desc-right.insert("side", desc-right.at("side", default: right))
+    desc-right.insert("pos", desc-right.at("pos", default: 85%))
+    labels.push(fill-label(desc-right))
   }
 
-  for l in (label, mult_left, mult_right, desc_left, desc_right) {
+  for l in (label, mult-left, mult-right, desc-left, desc-right) {
     if type(l) == str { l = (text: l) }
     if l != none {
       labels.push(fill-label(l))

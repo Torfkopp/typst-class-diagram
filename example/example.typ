@@ -67,8 +67,8 @@
     colour: yellow.lighten(50%),
     stroke: yellow
   ),
-  class-edge(<pers.east>, <a.1.75>, arrow: "Navigable Association", direction: right, label: "lives at", mult_left: "0..1", mult_right: "1"),
+  class-edge(<pers.east>, <a.1.75>, arrow: "Navigable Association", direction: right, label: "lives at", mult-left: "0..1", mult-right: "1"),
   class-edge(<pers.south>, (1.275, 3.5), (0.28, 3.5), <s.north>, arrow: "Inheritance", direction: left),
   class-edge(<pers.south>, (1.275, 3.5), (5.023, 3.5), <prof.north>, arrow: "Inheritance", direction: left),
-  class-edge(<s.east>, <prof.west>, arrow: "Navigable Association", direction: left, label: (text: "supervises", side: right), mult_left: "0..*", mult_right: "0..5"),
+  class-edge(<s.east>, <prof.west>, arrow: "Navigable Association", direction: left, label: (text: "supervises", side: right), mult-left: "0..*", mult-right: "0..5"),
 )

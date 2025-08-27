@@ -81,6 +81,19 @@
   ])
 }
 
+/// Draw a UML class node in a diagram.
+/// 
+/// Functions similar to fletcher's node, with addtional parameters for UML class specifics.
+/// 
+/// - label (str): The class's name
+/// - attributes (list of str): The class's attributes
+/// - methods (list of str): The class's methods
+/// - background (colour): The background colour of the node
+/// - colour (colour): The colour of the class name section
+/// - title-colour (colour): The colour of the class name text
+/// - stroke (colour): The colour of the border around the node
+/// - radius (float): The corner radius of the node
+///
 #let class-node(
   ..args,
   pos: auto,
