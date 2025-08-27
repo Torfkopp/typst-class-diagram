@@ -1,6 +1,295 @@
+#import "utils.typ": *
+#import "node.typ": *
+#import "edge.typ": *
 #import "draw.typ": draw-diagram
-#import "fletcher/diagram.typ": interpret-diagram-args, resolve-node-options, measure-node-size, resolve-edge-options, resolve-node-coordinates, resolve-edge-vertices, compute-grid, resolve-node-enclosures, resolve-edges
-#import "class-edge.typ": *
+#import "coords.typ": *
+
+
+
+/// Interpret #the-param[diagram][axes].
+///
+/// Returns a dictionary with:
+/// - `x`: Whether $u$ is reversed
+/// - `y`: Whether $v$ is reversed
+/// - `xy`: Whether the axes are swapped
+///
+/// - axes (array): Pair of directions specifying the interpretation of $(u, v)$
+///   coordinates. For example, `(ltr, ttb)` means $u$ goes $arrow.r$ and $v$
+///   goes $arrow.b$.
+/// -> dictionary
+#let interpret-axes(axes) = {
+	let dirs = axes.map(direction.axis)
+	let flip
+	if dirs == ("horizontal", "vertical") {
+		flip = false
+	} else if dirs == ("vertical", "horizontal") {
+		flip = true
+	} else {
+		error("Axes #0 cannot both be in the same direction. Try `axes: (ltr, ttb)`.", axes)
+	}
+
+	(
+		flip: (
+			x: axes.at(0) in (rtl, ttb),
+			y: axes.at(1) in (rtl, ttb),
+			xy: flip,
+		)
+	)
+}
+
+/// Convert an array of rects `(center: (x, y), size: (w, h))` with fractional
+/// positions into rects with integral positions.
+///
+/// If a rect is centered at a factional position `floor(x) < x < ceil(x)`, it
+/// will be replaced by two new rects centered at `floor(x)` and `ceil(x)`. The
+/// total width of the original rect is split across the two new rects according
+/// two which one is closer. (E.g., if the original rect is at `x = 0.25`, the
+/// new rect at `x = 0` has 75% the original width and the rect at `x = 1` has
+/// 25%.) The same splitting procedure is done for `y` positions and heights.
+///
+/// This is the algorithm used to determine grid layout in diagrams.
+///
+/// - rects (array): An array of rects of the form
+///   `(center: (x, y), size: (width, height))`. The coordinates `x` and `y` may
+///   be floats.
+/// -> array
+#let expand-fractional-rects(rects) = {
+	let new-rects
+	for axis in (0, 1) {
+		new-rects = ()
+		for rect in rects {
+			let coord = rect.center.at(axis)
+			let size = rect.size.at(axis)
+
+			if calc.fract(coord) == 0 {
+				rect.center.at(axis) = calc.trunc(coord)
+				new-rects.push(rect)
+			} else {
+				rect.center.at(axis) = calc.floor(coord)
+				rect.size.at(axis) = size*(calc.ceil(coord) - coord)
+				new-rects.push(rect)
+
+				rect.center.at(axis) = calc.ceil(coord)
+				rect.size.at(axis) = size*(coord - calc.floor(coord))
+				new-rects.push(rect)
+			}
+		}
+		rects = new-rects
+	}
+	new-rects
+}
+
+
+/// Determine the number and sizes of grid cells needed for a diagram with the
+/// given nodes and edges.
+///
+/// Returns a dictionary with:
+/// - `origin: (u-min, v-min)` Coordinate at the grid corner where elastic/`uv`
+///   coordinates are minimised.
+/// - `cell-sizes: (x-sizes, y-sizes)` Lengths and widths of each row and
+///   column.
+///
+/// - flip (dictionary): Describes axis order and orientation.
+/// - verts (array): Points that should be contained in the resulting grid.
+/// - rects (array): Rectangles (dictionaries of the form `(center, size)` which
+///   are used to determine cell sizes.
+#let compute-cell-sizes(flip, verts, rects) = {
+
+	if flip.xy {
+		// if x/y axes are flipped, transpose rectangles
+		rects = rects.map( ((center, size)) => {
+			(center: center, size: size.rev())
+		})
+	}
+	rects = expand-fractional-rects(rects)
+
+	// all points in diagram that should be spanned by coordinate grid
+	let points = rects.map(r => r.center)
+	points += verts
+
+	if points.len() == 0 { points.push((0,0)) }
+
+	let min-max-int(a) = (calc.floor(calc.min(..a)), calc.ceil(calc.max(..a)))
+	let (x-min, x-max) = min-max-int(points.map(p => p.at(0)))
+	let (y-min, y-max) = min-max-int(points.map(p => p.at(1)))
+	let origin = (x-min, y-min)
+	let bounding-dims = (x-max - x-min + 1, y-max - y-min + 1)
+
+	// Initialise row and column sizes
+	let cell-sizes = bounding-dims.map(n => (0pt,)*n)
+
+	// Expand cells to fit rects
+	for rect in rects {
+		let indices = vector.sub(rect.center, origin)
+		if flip.x { indices.at(0) = -1 - indices.at(0) }
+		if flip.y { indices.at(1) = -1 - indices.at(1) }
+		for axis in (0, 1) {
+			let i = indices.at(axis)
+			cell-sizes.at(axis).at(i) = calc.max(
+				cell-sizes.at(axis).at(i),
+				rect.size.at(axis),
+			)
+		}
+	}
+
+	if flip.xy {
+		cell-sizes = cell-sizes.rev()
+	}
+
+	(origin: origin, cell-sizes: cell-sizes)
+}
+
+/// Determine the centers of grid cells from their sizes and spacing between
+/// them.
+///
+/// Returns the a dictionary with:
+/// - `centers: (x-centers, y-centers)` Positions of each row and column,
+///   measured from the corner of the bounding box.
+/// - `bounding-size: (x-size, y-size)` Dimensions of the bounding box.
+///
+/// - grid (dictionary): Representation of the grid layout, including:
+///   - `cell-sizes: (x-sizes, y-sizes)` Lengths and widths of each row and
+///     column.
+///   - `spacing: (x-spacing, y-spacing)` Gap to leave between cells.
+/// -> dictionary
+#let compute-cell-centers(grid) = {
+	// (x: (c1x, c2x, ...), y: ...)
+	let centers = array.zip(grid.cell-sizes, grid.spacing)
+		.map(((sizes, spacing)) => {
+			array.zip(cumsum(sizes), sizes, range(sizes.len()))
+				.map(((end, size, i)) => end - size/2 + spacing*i)
+		})
+
+	let bounding-size = array.zip(centers, grid.cell-sizes)
+		.map(((centers, sizes)) => centers.at(-1) + sizes.at(-1)/2)
+
+	(
+		centers: centers,
+		bounding-size: bounding-size,
+	)
+}
+
+/// Determine the number, sizes and relative positions of rows and columns in
+/// the diagram's coordinate grid.
+///
+/// Rows and columns are sized to fit nodes. Coordinates are not required to
+/// start at the origin, `(0,0)`.
+#let compute-grid(rects, verts, options) = {
+	let grid = (
+		axes: options.axes,
+		spacing: options.spacing,
+	)
+
+	grid += interpret-axes(grid.axes)
+	grid += compute-cell-sizes(grid.flip, verts, rects)
+
+	// enforce minimum cell size
+	grid.cell-sizes = grid.cell-sizes.zip(options.cell-size)
+		.map(((sizes, min-size)) => sizes.map(calc.max.with(min-size)))
+
+	grid += compute-cell-centers(grid)
+
+	assert(grid.centers.at(0).len() == grid.cell-sizes.at(0).len())
+	assert(grid.centers.at(1).len() == grid.cell-sizes.at(1).len())
+
+	grid
+}
+
+#let extract-nodes-and-edges-from-equation(eq) = {
+	assert(eq.func() == math.equation)
+	let terms = flatten-sequence-to-array(eq.body)
+
+	let edges = ()
+	let nodes = ()
+
+	// convert math matrix into array-of-arrays matrix
+	let matrix = ((none,),)
+	let (x, y) = (0, 0)
+	for child in terms {
+		if child.func() == metadata {
+			if child.value.class == "node" {
+				let node = child.value
+				node.pos = (raw: (x, y))
+				nodes.push(node)
+			} else if child.value.class == "edge" {
+				let edge = child.value
+				edge.vertices.at(0) = map-auto(edge.vertices.at(0), (x, y))
+				if edge.label != none { edge.label = $edge.label$ } // why is this needed?
+				edge.vertices.at(-1) = map-auto(edge.vertices.at(-1), (rel: (1, 0)))
+				edge.node-index = none
+				edges.push(edge)
+			}
+		} else if repr(child.func()) == "linebreak" {
+			y += 1
+			x = 0
+			matrix.push((none,))
+		} else if repr(child.func()) == "align-point" {
+			x += 1
+			matrix.at(-1).push(none)
+		} else {
+			matrix.at(-1).at(-1) += child
+		}
+	}
+
+	// turn matrix into an array of nodes
+	for (y, row) in matrix.enumerate() {
+		for (x, item) in row.enumerate() {
+			if not is-space(item) {
+				nodes.push(node((x, y), $item$).value)
+			}
+		}
+	}
+
+
+	(
+		nodes: nodes,
+		edges: edges,
+	)
+}
+
+
+
+#let interpret-diagram-args(args) = {
+	if args.named().len() > 0 {
+		error("Unexpected named argument(s) #..0.", args.named().keys())
+	}
+
+	let positional-args = args.pos().flatten().join() + [] // join to ensure sequence
+	let objects = positional-args.children
+
+	let nodes = ()
+	let edges = ()
+
+	for obj in objects {
+		if obj.func() == metadata {
+			if obj.value.class == "node" {
+				let node = obj.value
+				nodes.push(node)
+
+			} else if obj.value.class == "edge" {
+				let edge = obj.value
+				edge.node-index = nodes.len()
+				edges.push(edge)
+			}
+
+		} else if obj.func() == math.equation {
+			let result = extract-nodes-and-edges-from-equation(obj)
+			nodes += result.nodes
+			edges += result.edges
+
+		} else {
+			panic("Unrecognised value passed to diagram:", obj)
+		}
+	}
+
+	(
+		nodes: nodes,
+		edges: edges,
+	)
+
+}
+
+
 
 /// Draw a diagram containing `node()`s and `edge()`s.
 ///
@@ -215,12 +504,7 @@
 			node = measure-node-size(node)
 			node
 		})
-		let edges = edges.map(
-			edge => if edge.at("labels", default: none) == none { 
-				resolve-edge-options(edge, options) } 
-				else { resolve-class-edge-options(edge, options) }
-		)
-		// let edges = edges.map(edge => resolve-class-edge-options(edge, options))
+		let edges = edges.map(edge => resolve-edge-options(edge, options))
 
 		// PHASE 1: Resolve uv coordinates where possible
 
