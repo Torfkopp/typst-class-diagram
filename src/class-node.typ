@@ -13,7 +13,7 @@
   attributes: (),
   methods: (),
 ) = {
-  let INLINE_SIDE = 3pt
+  let INLINE_SIDE = measure("o").width
   let INLINE_TOP = text.size / 2
   let (w, h) = node.size
   let title = node.label.child
@@ -22,8 +22,10 @@
   let width = 0pt
   for l in ((title,) + attributes + methods) {
     let line_width = measure(l).width
-    if line_width > width { width = line_width - w }
+    if line_width > width { width = line_width}
   }
+  width -= 2 * w
+  width += 2 * INLINE_SIDE
 
   // height based on the number of items
   let line-space = par.leading

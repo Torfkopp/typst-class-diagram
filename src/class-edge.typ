@@ -4,7 +4,7 @@
 #import "fletcher/src/edge.typ": interpret-edge-args, interpret-marks-arg, normalize-label-pos
 
 #let ALIASES = (
-  "Association": ("", "-", ""),
+  "Association": ("-", "-", "-"),
   "Navigable Association": ("<", "-", ">"),
   "Inheritance": ("<|", "-", "|>"),
   "Realisation": ("<|", "--", "|>"),
@@ -26,9 +26,14 @@
   } else if arrow == "Aggregation" {
     arrow-mark.inherit = "<>"
   } else if arrow == "Inheritance" or arrow == "Realisation" {
-    arrow-mark.inherit = "solid"
+    arrow-mark.inherit = "latex"
+    arrow-mark.fill = rgb(0,0,0,0)
+    arrow-mark.stroke = black
+    arrow-mark.size = 50
   } else if arrow == "Navigable Association" or arrow == "Dependency" {
     arrow-mark.inherit = "straight"
+  } else {
+    arrow-mark.inherit = "|"
   }
 
   let arrow = if direction == right { (none, arrow-mark) } else if direction == left { (arrow-mark, none) } else {
