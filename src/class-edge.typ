@@ -1,7 +1,7 @@
-#import "fletcher/utils.typ": *
-#import "fletcher/marks.typ": *
-#import "fletcher/coords.typ": default-ctx, find-farthest-intersection, resolve, vector-polar-with-xy-or-uv-length
-#import "fletcher/edge.typ": interpret-edge-args, interpret-marks-arg, normalize-label-pos
+#import "fletcher/src/utils.typ": *
+#import "fletcher/src/marks.typ": *
+#import "fletcher/src/coords.typ": default-ctx, find-farthest-intersection, resolve, vector-polar-with-xy-or-uv-length
+#import "fletcher/src/edge.typ": interpret-edge-args, interpret-marks-arg, normalize-label-pos
 
 #let ALIASES = (
   "Association": ("", "-", ""),

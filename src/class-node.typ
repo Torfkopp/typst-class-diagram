@@ -1,5 +1,5 @@
-#import "fletcher/node.typ": node
-#import "fletcher/deps.typ": cetz
+#import "fletcher/src/node.typ": node
+#import "fletcher/src/deps.typ": cetz
 #import cetz: draw, vector
 
 #let class-node-draw(

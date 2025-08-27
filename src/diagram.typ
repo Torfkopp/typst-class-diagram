@@ -1,5 +1,5 @@
 #import "draw.typ": draw-diagram
-#import "fletcher/diagram.typ": interpret-diagram-args, resolve-node-options, measure-node-size, resolve-edge-options, resolve-node-coordinates, resolve-edge-vertices, compute-grid, resolve-node-enclosures, resolve-edges
+#import "fletcher/src/diagram.typ": interpret-diagram-args, resolve-node-options, measure-node-size, resolve-edge-options, resolve-node-coordinates, resolve-edge-vertices, compute-grid, resolve-node-enclosures, resolve-edges
 #import "class-edge.typ": *
 
 /// Draw a diagram containing `node()`s and `edge()`s.

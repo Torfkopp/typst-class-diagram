@@ -1,0 +1,3 @@
+[submodule "src/fletcher"]
+	path = src/fletcher
+	url = https://github.com/Jollywatt/typst-fletcher

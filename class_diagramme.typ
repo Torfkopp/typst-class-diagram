@@ -1,6 +1,6 @@
 #import "/src/diagram.typ": diagram
-#import "/src/fletcher/edge.typ": edge
-#import "/src/fletcher/node.typ": node
+#import "/src/fletcher/src/edge.typ": edge
+#import "/src/fletcher/src/node.typ": node
 #import "/src/class-edge.typ": class-edge
 #import "/src/class-node.typ": class-node
 

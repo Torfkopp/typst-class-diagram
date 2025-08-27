@@ -1,5 +1,5 @@
 #import "draw-class-edge.typ": draw-class-edge
-#import "fletcher/draw.typ": *
+#import "fletcher/src/draw.typ": *
 
 #let draw-diagram(
 	grid,
