@@ -81,12 +81,12 @@
   - #strike[One Segment in the middle gets label]
 + #strike[Better name than "class-edge"]
   - #strike[Better names for other stuff as well]
-+ Clean Up
-  - Comments etc.
-  - Draw: Only `draw-diagram` is changed
-  - Diagram: Only `diagram` is changed
++ #strike[Clean Up]
+  - #strike[Comments etc.]
+  - #strike[Draw: Only `draw-diagram` is changed]
+  - #strike[Diagram: Only `diagram` is changed]
 + Package Up
-  - Fight with Typst's import system
-  - Minimal Usage of Fletcher
+  - #strike[Fight with Typst's import system]
+  - #strike[Minimal Usage of Fletcher]
 + Manual
   - Example
